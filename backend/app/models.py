@@ -14,22 +14,38 @@ from datetime import datetime
 from app.database import Base
 
 
+class Familiar(Base):
+    __tablename__ = "familiares"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    correo = Column(String(150), unique=True, index=True, nullable=False)
+    telefono = Column(String(20), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+
+    adultos = relationship(
+        "AdultoMayor",
+        back_populates="familiar"
+    )
+
 
 class AdultoMayor(Base):
     __tablename__ = "adultos_mayores"
 
-    __table_args__ = (
-        UniqueConstraint(
-            "telefono",
-            name="uq_adulto_telefono"
-        ),
-    )
-
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
     telefono = Column(String(20), nullable=False)
-    familiar_nombre = Column(String(100), nullable=False)
-    familiar_telefono = Column(String(20), nullable=False)
+
+    familiar_id = Column(
+        Integer,
+        ForeignKey("familiares.id"),
+        nullable=False
+    )
+
+    familiar = relationship(
+        "Familiar",
+        back_populates="adultos"
+    )
 
     medicamentos = relationship(
         "Medicamento",
@@ -55,20 +71,10 @@ class AdultoMayor(Base):
 class Medicamento(Base):
     __tablename__ = "medicamentos"
 
-    __table_args__ = (
-        UniqueConstraint(
-            "adulto_id",
-            "nombre",
-            "dosis",
-            "horario",
-            name="uq_medicamento_adulto"
-        ),
-    )
-
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
     dosis = Column(String(100), nullable=False)
-    horario = Column(String(10), nullable=False)
+    horario = Column(String(5), nullable=False)
 
     adulto_id = Column(
         Integer,
@@ -98,7 +104,7 @@ class Confirmacion(Base):
     id = Column(Integer, primary_key=True, index=True)
     mensaje = Column(Text, nullable=False)
     estado = Column(String(50), nullable=False)
-    fecha = Column(DateTime, default=datetime.now, nullable=False)
+    fecha = Column(DateTime, default=datetime.now)
 
     adulto_id = Column(
         Integer,
@@ -127,10 +133,10 @@ class Alerta(Base):
     __tablename__ = "alertas"
 
     id = Column(Integer, primary_key=True, index=True)
-    tipo = Column(String(50), nullable=False)
+    tipo = Column(String(100), nullable=False)
     mensaje = Column(Text, nullable=False)
-    estado = Column(String(50), default="pendiente", nullable=False)
-    fecha = Column(DateTime, default=datetime.now, nullable=False)
+    estado = Column(String(50), default="pendiente")
+    fecha = Column(DateTime, default=datetime.now)
 
     adulto_id = Column(
         Integer,
@@ -151,22 +157,16 @@ class Recordatorio(Base):
         UniqueConstraint(
             "medicamento_id",
             "fecha_programada",
-            name="uq_recordatorio_medicamento_fecha"
+            name="uq_medicamento_fecha"
         ),
     )
 
     id = Column(Integer, primary_key=True, index=True)
-
     mensaje = Column(Text, nullable=False)
-    estado = Column(String(30), default="simulado", nullable=False)
-    origen = Column(String(20), default="automatico", nullable=False)
-
+    estado = Column(String(50), default="simulado")
+    origen = Column(String(50), default="automatico")
     fecha_programada = Column(DateTime, nullable=False)
-    fecha_creacion = Column(
-        DateTime,
-        default=datetime.now,
-        nullable=False
-    )
+    fecha_creacion = Column(DateTime, default=datetime.now)
 
     adulto_id = Column(
         Integer,

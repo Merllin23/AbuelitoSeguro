@@ -59,13 +59,22 @@ def obtener_recordatorio_pendiente(db: Session, adulto_id: int):
 
 
 def notificar_familiar(adulto, resultado):
+    familiar = adulto.familiar
+
+    if not familiar or not familiar.telefono:
+        print(
+            f"El adulto {adulto.id} no tiene familiar registrado."
+        )
+        return
+
     telefono_familiar = normalizar_telefono(
-        adulto.familiar_telefono or ""
+        familiar.telefono
     )
 
     if not telefono_familiar:
         print(
-            f"El adulto {adulto.id} no tiene teléfono de familiar registrado."
+            f"El familiar del adulto {adulto.id} no tiene "
+            f"un teléfono válido."
         )
         return
 
@@ -158,25 +167,18 @@ async def recibir_mensaje_whatsapp(
 
                     telefono = normalizar_telefono(telefono)
 
-                    adulto = db.query(
+                    adultos = db.query(
                         models.AdultoMayor
-                    ).filter(
-                        models.AdultoMayor.telefono == telefono
-                    ).first()
+                    ).all()
 
-                    if not adulto:
-                        adultos = db.query(
-                            models.AdultoMayor
-                        ).all()
-
-                        adulto = next(
-                            (
-                                persona for persona in adultos
-                                if normalizar_telefono(persona.telefono)
-                                == telefono
-                            ),
-                            None
-                        )
+                    adulto = next(
+                        (
+                            persona for persona in adultos
+                            if normalizar_telefono(persona.telefono)
+                            == telefono
+                        ),
+                        None
+                    )
 
                     if not adulto:
                         print(f"Remitente no registrado: {telefono}")
@@ -218,7 +220,6 @@ async def recibir_mensaje_whatsapp(
                         f"Medicamento asociado: {medicamento_id}"
                     )
 
-                    # Notificar al familiar si se generó una alerta.
                     if resultado["categoria"] in [
                         "posible_alerta",
                         "alerta_prioritaria"

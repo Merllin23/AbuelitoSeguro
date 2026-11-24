@@ -1,7 +1,32 @@
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from datetime import datetime
 from typing import Optional
+
+
+# =====================================
+# FAMILIARES
+# =====================================
+
+class FamiliarCreate(BaseModel):
+    nombre: str
+    correo: EmailStr
+    telefono: str
+    password: str = Field(min_length=8)
+
+
+class FamiliarLogin(BaseModel):
+    correo: EmailStr
+    password: str
+
+
+class FamiliarResponse(BaseModel):
+    id: int
+    nombre: str
+    correo: EmailStr
+    telefono: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =====================================
@@ -11,12 +36,11 @@ from typing import Optional
 class AdultoCreate(BaseModel):
     nombre: str
     telefono: str
-    familiar_nombre: str
-    familiar_telefono: str
 
 
 class AdultoResponse(AdultoCreate):
     id: int
+    familiar_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -92,6 +116,10 @@ class RecordatorioResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+# =====================================
+# PROCESAMIENTO DE RESPUESTAS
+# =====================================
 
 class RespuestaProcesar(BaseModel):
     texto: str
